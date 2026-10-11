@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HESSU 64 – Softa</title>
+<meta name="description" content="Hessu Järvisen pelit ja selaimessa toimivat softat.">
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-H9HNS0SNV3"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-H9HNS0SNV3');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --border:#6c5eb5;   /* vaaleansininen reunus */
+    --bg:#352879;       /* tummansininen ruutu */
+    --fg:#6c5eb5;       /* vaaleansininen teksti */
+    --dim:#70a4b2;      /* kuvaukset */
+    --fs:clamp(8px, calc((100vw - 40px) / 42), 16px);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    min-height:100vh;
+    background:var(--border);
+    color:var(--fg);
+    font-family:'Press Start 2P',ui-monospace,monospace;
+    font-size:var(--fs);
+    line-height:1.3;
+    display:flex;flex-direction:column;align-items:center;
+    padding:clamp(16px,7vh,72px) 16px;
+    -webkit-font-smoothing:none;
+  }
+  .screen{
+    position:relative;
+    background:var(--bg);
+    width:42em;max-width:100%;
+    min-height:calc(25 * 1.3em + 1em);
+    padding:.5em;
+    overflow-wrap:anywhere;
+    box-shadow:0 0 0 .15em rgba(0,0,0,.15);
+  }
+  .screen::after{ /* kevyet CRT-juovat */
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(to bottom,rgba(0,0,0,.13) 0 1px,transparent 1px 3px);
+  }
+  .ln{white-space:pre-wrap;min-height:1.3em}
+  .rev{background:var(--fg);color:var(--bg)}
+  .desc{color:var(--dim)}
+  a.entry{color:inherit;text-decoration:none;white-space:pre;cursor:pointer}
+  a.entry:hover,a.entry:focus-visible{background:var(--fg);color:var(--bg);outline:none}
+  a.inline{color:inherit}
+  .prompt{position:relative;min-height:1.3em;white-space:pre-wrap}
+  .cursor{display:inline-block;width:1em;height:1em;background:var(--fg);vertical-align:-.1em;animation:blink 1s steps(1) infinite}
+  .busy .prompt{visibility:hidden}
+  @keyframes blink{50%{opacity:0}}
+  #cmd{ /* näkymätön syötekenttä, jotta mobiilinäppäimistö toimii */
+    position:absolute;inset:0;width:100%;opacity:0;border:0;padding:0;
+    font-size:16px;background:transparent;color:transparent;caret-color:transparent;
+  }
+  .keys{display:flex;flex-wrap:wrap;gap:1em;justify-content:center;margin-top:2em;max-width:42em}
+  .keys button{
+    font:inherit;cursor:pointer;border:0;
+    background:#959595;color:#000;padding:.7em .9em;
+    box-shadow:inset -.25em -.25em 0 #6c6c6c, inset .25em .25em 0 #c8c8c8;
+  }
+  .keys button:active{box-shadow:inset .25em .25em 0 #6c6c6c}
+  .keys b{color:#352879}
+  noscript a{color:inherit}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+</style>
+</head>
+<body>
+<main class="screen" id="screen" aria-live="polite">
+  <div id="out"></div>
+  <div class="prompt"><span id="typed"></span><span class="cursor"></span>
+    <input id="cmd" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Komento (kokeile HELP)">
+  </div>
+  <noscript>
+    <div class="ln">HESSU-SOFTA</div>
+    <div class="ln"><a href="/softa/colesteroids/">COLESTEROIDS OG+</a></div>
+    <div class="ln"><a href="https://github.com/hessuj">GITHUB/HESSUJ</a></div>
+  </noscript>
+</main>
+
+<nav class="keys" aria-label="Pikanäppäimet">
+  <button data-k="F1"><b>F1</b> SOFTAT</button>
+  <button data-k="F3"><b>F3</b> MINUSTA</button>
+  <button data-k="F5"><b>F5</b> GITHUB</button>
+  <button data-k="F7"><b>F7</b> RESET</button>
+</nav>
+
+<script>
+/* ===== Muokkaa tätä listaa, kun tulee uusia projekteja =====
+   name  = näkyvä nimi (max 16 merkkiä)
+   file  = nimi LOAD-komentoon
+   blocks= "levyn koko" (koristetta)
+   type  = PRG / SEQ / USR
+   url   = osoite; soon:true = tulossa; action:'about' = näyttää esittelyn */
+const GITHUB = 'https://github.com/hessuj';
+const PROGRAMS = [
+  {name:'COLESTEROIDS OG+', file:'COLESTEROIDS', blocks:42, type:'PRG', url:'/softa/colesteroids/',
+   desc:'JYU:N OHJELMOINTI 1 -HARJOITUSTYÖ (2019), UUDESTISYNTYNYT SELAIMEEN 2026.'},
+  {name:'SEURAAVA PELI',    file:'PELI',         blocks:0,  type:'PRG', soon:true,
+   desc:'TYÖN ALLA. PALAA MYÖHEMMIN.'},
+  {name:'TYÖKALUT',         file:'TYOKALUT',     blocks:0,  type:'PRG', soon:true,
+   desc:'PIENIÄ HYÖTYSOFTIA SELAIMEEN. TULOSSA.'},
+  {name:'MINUSTA.TXT',      file:'MINUSTA',      blocks:3,  type:'SEQ', action:'about'},
+  {name:'GITHUB/HESSUJ',    file:'GITHUB',       blocks:1,  type:'USR', url:GITHUB, external:true},
+];
+const ABOUT = [
+  'HESSU JÄRVINEN',
+  '',
+  'LEHTORI (TIETOJÄRJESTELMÄT JA KYBERTURVALLISUUS), JAMK.',
+  'VÄITÖSKIRJATUTKIJA, JYVÄSKYLÄN YLIOPISTO.',
+  '',
+  'IT-ALALLA VUODESTA 1997: YRITYSJÄRJESTELMIÄ, RATKAISUARKKITEHTUURIA, PROSESSIKEHITYSTÄ JA KYBERTURVALLISUUDEN HALLINTAA.',
+  '',
+  'TÄÄLLÄ ASUU HARRASTUSKOODI: PELEJÄ JA PIKKUSOFTAA, JOTKA PYÖRIVÄT SELAIMESSA. OSA SYNTYY TEKOÄLYN KANSSA VIBE-KOODATEN, SEKÄ HUVIN VUOKSI ETTÄ TUTKIMUKSEN NIMISSÄ.',
+];
+
+/* ===== Moottori ===== */
+const PAL = ['#000000','#ffffff','#68372b','#70a4b2','#6f3d86','#588d43','#352879','#b8c76f',
+             '#6f4f25','#433900','#9a6759','#444444','#6c6c6c','#9ad284','#6c5eb5','#959595'];
+const out = document.getElementById('out');
+const screen = document.getElementById('screen');
+const cmd = document.getElementById('cmd');
+const typed = document.getElementById('typed');
+const root = document.documentElement;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let fast = reduce, busy = false;
+
+const sleep = ms => fast ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
+const scrollEnd = () => window.scrollTo({top: document.body.scrollHeight});
+function setBusy(b){ busy = b; screen.classList.toggle('busy', b); }
+
+function line(text = '', cls){
+  const d = document.createElement('div');
+  d.className = 'ln' + (cls ? ' ' + cls : '');
+  d.textContent = text;
+  out.appendChild(d); scrollEnd();
+  return d;
+}
+async function type(text){
+  const d = line('');
+  for (const ch of text){ d.textContent += ch; await sleep(22); }
+}
+async function stripes(ms){ /* latausraidat reunukseen */
+  if (fast) return;
+  const end = Date.now() + ms;
+  while (Date.now() < end){
+    const g = []; let y = 0;
+    while (y < 100){
+      const h = 1.5 + Math.random() * 5, c = PAL[Math.floor(Math.random() * 16)];
+      g.push(`${c} ${y}% ${Math.min(100, y + h)}%`); y += h;
+    }
+    document.body.style.background = `linear-gradient(${g.join(',')})`;
+    await new Promise(r => setTimeout(r, 70));
+  }
+  document.body.style.background = '';
+}
+
+function dir(){
+  const head = line('0 ');
+  const r = document.createElement('span'); r.className = 'rev';
+  r.textContent = '"HESSU-SOFTA     " HJ 2A'; head.appendChild(r);
+  let used = 0;
+  for (const p of PROGRAMS){
+    used += p.blocks;
+    const d = line('');
+    const a = document.createElement('a');
+    a.className = 'entry';
+    a.textContent = String(p.blocks).padEnd(5) + ('"' + p.name + '"').padEnd(19) + p.type;
+    a.href = p.url || '#';
+    if (p.external) a.rel = 'noopener';
+    a.addEventListener('click', e => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault(); openProgram(p);
+    });
+    d.appendChild(a);
+    if (p.desc) line('     ' + p.desc, 'desc');
+  }
+  line(`${664 - used} BLOCKS FREE.`);
+}
+
+function about(){
+  line('');
+  ABOUT.forEach(t => line(t));
+  const d = line('GITHUB: ');
+  const a = document.createElement('a'); a.className = 'inline';
+  a.href = GITHUB; a.rel = 'noopener'; a.textContent = 'GITHUB.COM/HESSUJ';
+  d.appendChild(a);
+}
+
+async function openProgram(p){
+  if (busy) return; setBusy(true);
+  if (p.action === 'about'){
+    line(`LOAD"${p.file}",8`); line('LOADING'); await stripes(400);
+    about(); line(''); line('READY.'); setBusy(false); return;
+  }
+  line(`LOAD"${p.file}",8,1`); line('');
+  line('SEARCHING FOR ' + p.file); await sleep(500);
+  if (p.soon){
+    line('?FILE NOT FOUND  ERROR'); line('(' + (p.desc || 'TULOSSA PIAN.') + ')', 'desc');
+    line('READY.'); setBusy(false); return;
+  }
+  line('LOADING'); await stripes(1300);
+  line('READY.'); line('RUN'); await sleep(300);
+  if (typeof gtag === 'function') gtag('event', 'open_project', {project: p.file});
+  location.href = p.url;
+  setTimeout(() => setBusy(false), 1500);
+}
+
+function help(){
+  [
+    'KOMENNOT:',
+    ' LOAD"$",8     SOFTALISTA',
+    ' LOAD"NIMI"    KÄYNNISTÄ OHJELMA',
+    ' ABOUT         KUKA TÄÄLLÄ ASUU',
+    ' GITHUB        LÄHDEKOODIT',
+    ' CLR           TYHJENNÄ RUUTU',
+    ' SYS 64738     REBOOT',
+    ' POKE 53280,X  REUNUKSEN VÄRI (0-15)',
+    ' POKE 53281,X  TAUSTAN VÄRI (0-15)',
+  ].forEach(t => line(t));
+}
+
+async function run(raw){
+  const s = raw.trim().toUpperCase();
+  line(s);
+  if (!s) return;
+  let m;
+  if (['HELP','?','LIST'].includes(s)) help();
+  else if (s === 'DIR' || s === '$' || /^LOAD\s*"\$"/.test(s)) dir();
+  else if ((m = s.match(/^LOAD\s*"([^"]*)"?/))){
+    const q = m[1].replace('*', '');
+    const p = PROGRAMS.find(p => p.file.startsWith(q) || p.name.startsWith(q));
+    if (p && q){ openProgram(p); return; }
+    line(''); line('SEARCHING FOR ' + m[1]); line('?FILE NOT FOUND  ERROR');
+  }
+  else if (s === 'ABOUT' || s === 'RUN') about();
+  else if (s === 'GITHUB'){ openProgram(PROGRAMS.find(p => p.file === 'GITHUB')); return; }
+  else if (s === 'CLR' || s === 'CLS'){ out.textContent = ''; }
+  else if (/^SYS\s*64738$/.test(s)){ reset(); return; }
+  else if ((m = s.match(/^POKE\s*(\d+)\s*,\s*(\d+)$/))){
+    const c = PAL[+m[2] % 16];
+    if (m[1] === '53280') root.style.setProperty('--border', c);
+    else if (m[1] === '53281') root.style.setProperty('--bg', c);
+    else if (m[1] === '646') root.style.setProperty('--fg', c);
+  }
+  else if ((m = s.match(/^PRINT\s*"([^"]*)"?/))) line(m[1]);
+  else line('?SYNTAX  ERROR');
+  line(''); line('READY.');
+}
+
+function reset(){
+  ['--border','--bg','--fg'].forEach(v => root.style.removeProperty(v));
+  boot();
+}
+
+async function boot(){
+  setBusy(true); out.textContent = '';
+  line('');
+  await type('    **** HESSU 64 BASIC V2 ****');
+  line('');
+  await type(' 64K RAM SYSTEM  38911 BASIC BYTES FREE');
+  line('');
+  line('READY.');
+  await sleep(450);
+  await type('LOAD"$",8');
+  line(''); line('SEARCHING FOR $'); await sleep(450);
+  line('LOADING'); await stripes(700);
+  line('READY.');
+  await type('LIST');
+  line('');
+  dir();
+  line('');
+  line('VALITSE OHJELMA TAI KIRJOITA HELP.', 'desc');
+  line('READY.');
+  setBusy(false);
+  fast = reduce;
+  if (matchMedia('(pointer: fine)').matches) cmd.focus({preventScroll: true});
+}
+
+/* syöte */
+cmd.addEventListener('input', () => { typed.textContent = cmd.value.toUpperCase(); });
+cmd.addEventListener('keydown', e => {
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    if (busy) return;
+    const v = cmd.value; cmd.value = ''; typed.textContent = '';
+    run(v);
+  }
+});
+screen.addEventListener('click', e => { if (!e.target.closest('a')) cmd.focus({preventScroll: true}); });
+
+/* intron ohitus */
+const skip = () => { if (busy) fast = true; };
+addEventListener('keydown', skip);
+addEventListener('pointerdown', skip);
+
+/* funktionäppäimet */
+const fkeys = {
+  F1: () => { if (!busy){ line('LOAD"$",8'); dir(); line(''); line('READY.'); } },
+  F3: () => { if (!busy){ about(); line(''); line('READY.'); } },
+  F5: () => openProgram(PROGRAMS.find(p => p.file === 'GITHUB')),
+  F7: () => { if (!busy) reset(); },
+};
+document.querySelectorAll('.keys button').forEach(b =>
+  b.addEventListener('click', () => fkeys[b.dataset.k]()));
+addEventListener('keydown', e => { if (fkeys[e.key]){ e.preventDefault(); fkeys[e.key](); } });
+
+boot();
+</script>
+</body>
+</html>
