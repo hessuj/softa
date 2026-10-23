@@ -47,14 +47,16 @@
   }
   .ln{white-space:pre-wrap;min-height:1.3em}
   .rev{background:var(--fg);color:var(--bg)}
-  .desc{color:var(--dim);padding-left:5ch}
+  .program{display:grid;grid-template-columns:5ch 19ch 3ch minmax(0,1fr)}
   a.entry{
-    display:grid;grid-template-columns:5ch 19ch 3ch;
-    width:max-content;max-width:100%;
+    display:grid;grid-column:1/-1;
+    grid-template-columns:5ch 19ch 3ch minmax(0,1fr);
+    min-height:1.3em;width:100%;max-width:100%;
     color:inherit;text-decoration:none;cursor:pointer
   }
   .entry-name{white-space:pre}
   a.entry:hover,a.entry:focus-visible{background:var(--fg);color:var(--bg);outline:none}
+  .desc{grid-column:2/-1;color:var(--dim)}
   a.inline{color:inherit}
   .prompt{position:relative;min-height:1.3em;white-space:pre-wrap}
   .cursor{display:inline-block;width:1em;height:1em;background:var(--fg);vertical-align:-.1em;animation:blink 1s steps(1) infinite}
@@ -182,7 +184,9 @@ function dir(){
   let used = 0;
   for (const p of PROGRAMS){
     used += p.blocks;
-    const d = line('');
+    const d = document.createElement('div');
+    d.className = 'program';
+    out.appendChild(d);
     const a = document.createElement('a');
     a.className = 'entry';
     const blocks = document.createElement('span');
@@ -200,7 +204,13 @@ function dir(){
       e.preventDefault(); openProgram(p);
     });
     d.appendChild(a);
-    if (p.desc) line(p.desc, 'desc');
+    if (p.desc){
+      const desc = document.createElement('div');
+      desc.className = 'desc';
+      desc.textContent = p.desc;
+      d.appendChild(desc);
+    }
+    scrollEnd();
   }
   line(`${664 - used} BLOCKS FREE.`);
 }
