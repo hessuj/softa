@@ -47,8 +47,13 @@
   }
   .ln{white-space:pre-wrap;min-height:1.3em}
   .rev{background:var(--fg);color:var(--bg)}
-  .desc{color:var(--dim)}
-  a.entry{color:inherit;text-decoration:none;white-space:pre;cursor:pointer}
+  .desc{color:var(--dim);padding-left:5ch}
+  a.entry{
+    display:grid;grid-template-columns:5ch 19ch 3ch;
+    width:max-content;max-width:100%;
+    color:inherit;text-decoration:none;cursor:pointer
+  }
+  .entry-name{white-space:pre}
   a.entry:hover,a.entry:focus-visible{background:var(--fg);color:var(--bg);outline:none}
   a.inline{color:inherit}
   .prompt{position:relative;min-height:1.3em;white-space:pre-wrap}
@@ -82,6 +87,7 @@
     <div class="ln"><a href="/softa/colesteroids/">COLESTEROIDS OG+</a></div>
     <div class="ln"><a href="/softa/100paivaa/">100 PÄIVÄÄ</a></div>
     <div class="ln">KYBERTURVALLISUUDEN JOHTAMISEN OPETUSPELI.</div>
+    <div class="ln">PIENIÄ HYÖTYSOFTIA SELAIMEEN:</div>
     <div class="ln"><a href="/hessutalks/">HESSUTALKS</a></div>
     <div class="ln">SALATTU KYSYMYS- JA PALAUTEKANAVA LUENNOILLE.</div>
     <div class="ln"><a href="https://github.com/hessuj">GITHUB/HESSUJ</a></div>
@@ -108,12 +114,12 @@ const PROGRAMS = [
    desc:'JYU:N OHJELMOINTI 1 -HARJOITUSTYÖ (2019), UUDESTISYNTYNYT SELAIMEEN 2026.'},
   {name:'100 PÄIVÄÄ',      file:'100PAIVAA',    blocks:1,  type:'PRG', url:'https://hessujarvinen.com/softa/100paivaa/', external:true,
    desc:'KYBERTURVALLISUUDEN JOHTAMISEN OPETUSPELI.'},
-  {name:'HESSUTALKS',      file:'HESSUTALKS',   blocks:1,  type:'PRG', url:'https://hessujarvinen.com/hessutalks/', external:true,
-   desc:'PÄÄSTÄ PÄÄHÄN SALATTU KYSYMYS- JA PALAUTEKANAVA LUENNOILLE JA PUHEILLE.'},
   {name:'SEURAAVA PELI',    file:'PELI',         blocks:0,  type:'PRG', soon:true,
    desc:'TYÖN ALLA. PALAA MYÖHEMMIN.'},
   {name:'TYÖKALUT',         file:'TYOKALUT',     blocks:0,  type:'PRG', soon:true,
    desc:'PIENIÄ HYÖTYSOFTIA SELAIMEEN. TULOSSA.'},
+  {name:'HESSUTALKS',      file:'HESSUTALKS',   blocks:1,  type:'PRG', url:'https://hessujarvinen.com/hessutalks/', external:true,
+   desc:'PÄÄSTÄ PÄÄHÄN SALATTU KYSYMYS- JA PALAUTEKANAVA LUENNOILLE JA PUHEILLE.'},
   {name:'MINUSTA.TXT',      file:'MINUSTA',      blocks:3,  type:'SEQ', action:'about'},
   {name:'GITHUB/HESSUJ',    file:'GITHUB',       blocks:1,  type:'USR', url:GITHUB, external:true},
 ];
@@ -179,7 +185,14 @@ function dir(){
     const d = line('');
     const a = document.createElement('a');
     a.className = 'entry';
-    a.textContent = String(p.blocks).padEnd(5) + ('"' + p.name + '"').padEnd(19) + p.type;
+    const blocks = document.createElement('span');
+    blocks.textContent = p.blocks;
+    const name = document.createElement('span');
+    name.className = 'entry-name';
+    name.textContent = '"' + p.name + '"';
+    const type = document.createElement('span');
+    type.textContent = p.type;
+    a.append(blocks, name, type);
     a.href = p.url || '#';
     if (p.external) a.rel = 'noopener';
     a.addEventListener('click', e => {
@@ -187,7 +200,7 @@ function dir(){
       e.preventDefault(); openProgram(p);
     });
     d.appendChild(a);
-    if (p.desc) line('     ' + p.desc, 'desc');
+    if (p.desc) line(p.desc, 'desc');
   }
   line(`${664 - used} BLOCKS FREE.`);
 }
