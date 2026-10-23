@@ -22,6 +22,12 @@ Sivuston tyyli on inspiroitu vanhoista tietokoneista, Commodore-tyylisistä käy
 - F1/F3/F5/F7-pikanäppäimet
 - tuki resoluutiolle ja liiketunnistukselle (esim. reduced motion)
 
+## Ohjelmat
+
+- **Colesteroids OG+** – selaimessa pelattava fysiikkapeli.
+- **100 päivää** – kyberturvallisuuden johtamisen opetuspeli.
+- **HessuTalks** – päästä päähän salattu kysymys- ja palautekanava luennoille ja puheille.
+
 ## Rakenne
 
 - `index.html` – koko sovellus ja käyttöliittymä
